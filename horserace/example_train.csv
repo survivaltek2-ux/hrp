@@ -1,0 +1,8 @@
+race_id,horse_id,finish_position,distance_meters,draw,weight_carried,going,race_class,age,days_since_last_run,jockey,trainer,official_rating
+R1,H1,1,1400,2,56.0,Good,Class 4,4,21,J1,T1,78
+R1,H2,3,1400,5,55.0,Good,Class 4,3,35,J2,T2,74
+R1,H3,2,1400,1,57.0,Good,Class 4,5,14,J3,T1,80
+R2,H4,2,2000,7,58.0,Soft,Class 3,6,60,J1,T3,90
+R2,H5,1,2000,4,56.0,Soft,Class 3,4,28,J4,T4,86
+R2,H6,3,2000,9,60.0,Soft,Class 3,5,10,J5,T5,92
+
