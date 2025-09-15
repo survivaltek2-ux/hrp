@@ -47,6 +47,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        racing: {
+          primary: "hsl(var(--racing-primary))",
+          gold: "hsl(var(--racing-gold))",
+          "gold-dark": "hsl(var(--racing-gold-dark))",
+          surface: "hsl(var(--racing-surface))",
+          "surface-hover": "hsl(var(--racing-surface-hover))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -57,6 +64,18 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-gold": "var(--gradient-gold)",
+        "gradient-surface": "var(--gradient-surface)",
+      },
+      boxShadow: {
+        racing: "var(--shadow-racing)",
+        gold: "var(--shadow-gold)",
+      },
+      transitionTimingFunction: {
+        racing: "var(--transition-racing)",
       },
       borderRadius: {
         lg: "var(--radius)",
