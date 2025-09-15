@@ -1,1 +1,4 @@
 project_id = "rlubhmskglzioqncvgor"
+
+[functions.fetch-racing-data]
+verify_jwt = false
