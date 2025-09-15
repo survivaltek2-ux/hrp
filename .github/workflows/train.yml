@@ -1,0 +1,65 @@
+name: Train Model
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: 'Start date (YYYY-MM-DD)'
+        required: true
+      end_date:
+        description: 'End date (YYYY-MM-DD)'
+        required: true
+      region:
+        description: 'Region code (optional)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r horse-race-predictor/requirements.txt
+
+      - name: Fetch results
+        env:
+          THERACINGAPI_USERNAME: ${{ secrets.THERACINGAPI_USERNAME }}
+          THERACINGAPI_PASSWORD: ${{ secrets.THERACINGAPI_PASSWORD }}
+          THERACINGAPI_BASE: ${{ secrets.THERACINGAPI_BASE }}
+        run: |
+          python -m horserace.ingest_theracingapi \
+            results \
+            --start_date "${{ github.event.inputs.start_date }}" \
+            --end_date "${{ github.event.inputs.end_date }}" \
+            ${REGION:+--region "$REGION"} \
+            --out_csv horse-race-predictor/artifacts/results.csv
+        shell: bash
+        env:
+          REGION: ${{ github.event.inputs.region }}
+
+      - name: Train model
+        run: |
+          python -m horserace.train \
+            --train_csv horse-race-predictor/artifacts/results.csv \
+            --out_model horse-race-predictor/artifacts/model.joblib
+
+      - name: Commit model
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add horse-race-predictor/artifacts/model.joblib
+          git commit -m "ci(train): update model artifact for ${{ github.event.inputs.start_date }}..${{ github.event.inputs.end_date }}" || echo "No changes to commit"
+          git push
+

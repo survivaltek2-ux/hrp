@@ -1,0 +1,72 @@
+name: Daily Predictions
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 06:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Prediction date (YYYY-MM-DD), defaults to today UTC'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r horse-race-predictor/requirements.txt
+
+      - name: Ensure model exists
+        run: |
+          test -f horse-race-predictor/artifacts/model.joblib || { echo "Missing model artifact. Run 'Train Model' workflow first."; exit 1; }
+
+      - name: Compute date
+        id: dates
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            DATE="${{ github.event.inputs.date }}"
+          else
+            DATE="$(date -u +%F)"
+          fi
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch racecard
+        env:
+          THERACINGAPI_USERNAME: ${{ secrets.THERACINGAPI_USERNAME }}
+          THERACINGAPI_PASSWORD: ${{ secrets.THERACINGAPI_PASSWORD }}
+          THERACINGAPI_BASE: ${{ secrets.THERACINGAPI_BASE }}
+        run: |
+          python -m horserace.ingest_theracingapi \
+            racecard \
+            --date "${{ steps.dates.outputs.date }}" \
+            --out_csv horse-race-predictor/artifacts/card_${{ steps.dates.outputs.date }}.csv
+
+      - name: Predict
+        run: |
+          python -m horserace.predict \
+            --model horse-race-predictor/artifacts/model.joblib \
+            --card_csv horse-race-predictor/artifacts/card_${{ steps.dates.outputs.date }}.csv \
+            --out_csv horse-race-predictor/artifacts/predictions_${{ steps.dates.outputs.date }}.csv
+
+      - name: Commit predictions
+        run: |
+          cp horse-race-predictor/artifacts/predictions_${{ steps.dates.outputs.date }}.csv horse-race-predictor/artifacts/predictions_latest.csv
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add horse-race-predictor/artifacts/predictions_*.csv
+          git commit -m "ci(predict): predictions for ${{ steps.dates.outputs.date }}" || echo "No changes to commit"
+          git push
+
