@@ -59,14 +59,15 @@ jobs:
           python -m horserace.predict \
             --model horse-race-predictor/artifacts/model.joblib \
             --card_csv horse-race-predictor/artifacts/card_${{ steps.dates.outputs.date }}.csv \
-            --out_csv horse-race-predictor/artifacts/predictions_${{ steps.dates.outputs.date }}.csv
+            --out_csv horse-race-predictor/artifacts/predictions_${{ steps.dates.outputs.date }}.csv \
+            --out_json horse-race-predictor/artifacts/predictions_${{ steps.dates.outputs.date }}.json
 
       - name: Commit predictions
         run: |
           cp horse-race-predictor/artifacts/predictions_${{ steps.dates.outputs.date }}.csv horse-race-predictor/artifacts/predictions_latest.csv
+          cp horse-race-predictor/artifacts/predictions_${{ steps.dates.outputs.date }}.json horse-race-predictor/artifacts/predictions_latest.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add horse-race-predictor/artifacts/predictions_*.csv
+          git add horse-race-predictor/artifacts/predictions_*.csv horse-race-predictor/artifacts/predictions_*.json
           git commit -m "ci(predict): predictions for ${{ steps.dates.outputs.date }}" || echo "No changes to commit"
           git push
-
